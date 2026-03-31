@@ -1,0 +1,51 @@
+{
+  "_description": "FinCEN Currency Transaction Report (CTR) field specification — BSA E-Filing format reference",
+  "filing_type": "CTR",
+  "bsa_efiling_form": "FinCEN CTR (FINCEN 112)",
+  "filing_deadline_days": 15,
+  "aggregation_rules": {
+    "window": "Same calendar day",
+    "scope": "Same person, same institution (all branches)",
+    "threshold": 10000,
+    "notes": "Aggregate ALL cash-in and ALL cash-out separately. Multiple transactions by same person on same day = one CTR."
+  },
+  "fields": {
+    "part_i_person_conducting_transaction": {
+      "_description": "The individual who physically conducted the transaction (walked up to teller/ATM)",
+      "last_name": {"required": true},
+      "first_name": {"required": true},
+      "middle_name": {"required": false},
+      "tin": {"required": true, "notes": "SSN or ITIN"},
+      "dob": {"required": true, "format": "YYYY-MM-DD"},
+      "address": {"required": true},
+      "city": {"required": true},
+      "state": {"required": true},
+      "zip": {"required": true},
+      "occupation": {"required": true}
+    },
+    "part_ii_person_on_whose_behalf": {
+      "_description": "Required ONLY if different from person conducting. The beneficial owner of the funds.",
+      "last_name": {"required": "if different from part_i"},
+      "first_name": {"required": "if different from part_i"},
+      "tin": {"required": "if different from part_i"},
+      "dob": {"required": "if different from part_i"},
+      "address": {"required": "if different from part_i"}
+    },
+    "part_iii_transaction_information": {
+      "date": {"required": true, "format": "YYYY-MM-DD"},
+      "total_cash_in": {"required": false, "type": "decimal"},
+      "total_cash_out": {"required": false, "type": "decimal"},
+      "transaction_types": {
+        "required": true,
+        "values": ["Cash in", "Cash out", "Armored car", "ATM", "Check cashed", "Currency exchange", "Deposit", "Mail deposit/shipment", "Payment", "Purchase of negotiable instrument", "Structured product", "Withdrawal", "Wire transfer (domestic)", "Wire transfer (international)", "Other"]
+      },
+      "account_numbers": {"required": false, "notes": "Accounts involved in the transaction"}
+    },
+    "part_iv_financial_institution": {
+      "institution_name": {"required": true},
+      "ein": {"required": true},
+      "branch_address": {"required": true, "notes": "Branch where transaction occurred"},
+      "primary_federal_regulator": {"required": true}
+    }
+  }
+}

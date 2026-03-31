@@ -1,0 +1,38 @@
+{
+  "customer_id": "CUST-4471",
+  "last_name": "Torres",
+  "first_name": "Carlos",
+  "middle_name": "A.",
+  "dob": "1978-04-15",
+  "ssn_last4": "XXXX",
+  "address": "1842 Maple Street, Houston, TX 77004",
+  "phone": "713-555-0142",
+  "email": "ctorres@email.com",
+  "occupation": "Freelance Consultant",
+  "employer": "Self-employed",
+  "annual_income_stated": 55000,
+  "customer_since": "2021-06-10",
+  "account_purpose_stated": "Personal checking — income deposits and bill pay",
+  "kyc_completed": "2021-06-10",
+  "kyc_tier": "Standard",
+  "risk_rating": "MEDIUM",
+  "accounts": [
+    {
+      "account_number": "10044710001",
+      "account_type": "CHECKING",
+      "opened": "2021-06-10",
+      "status": "ACTIVE",
+      "average_monthly_balance": 4200,
+      "primary_transaction_types": ["ACH_CREDIT", "ACH_DEBIT", "DEBIT_CARD"]
+    }
+  ],
+  "transaction_baseline_90d": {
+    "avg_monthly_volume": 8,
+    "avg_monthly_value": 6500,
+    "typical_transaction_types": ["ACH_CREDIT", "ACH_DEBIT", "DEBIT_CARD"],
+    "cash_transaction_history": "No prior cash transactions in 90-day baseline"
+  },
+  "prior_sar_history": [],
+  "prior_ctr_history": [],
+  "edd_history": []
+}

@@ -1,0 +1,351 @@
+phases:
+  ingest-transactions:
+    mode: command
+    command:
+      program: bash
+      args: ["-c", "bash scripts/ingest-transactions.sh"]
+      cwd_mode: project_root
+      timeout_secs: 60
+
+  screen-transactions:
+    mode: agent
+    agent: transaction-screener
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    directive: |
+      Screen all transactions in data/transactions/normalized/batch.json against BSA/AML rules.
+
+      Read the normalized transaction batch and apply each of your screening rules:
+      1. CTR triggers: flag any cash transaction >= $10,000
+      2. Structuring: detect clusters of sub-$10K cash transactions by the same customer within
+         24-hour and 7-day rolling windows that aggregate above $10,000
+      3. Velocity anomalies: compare each customer's current activity against their historical
+         baseline from data/customers/ — flag deviations > 300% volume or > 500% value
+      4. Geographic risk: check transaction origins/destinations against FATF list in config/screening-rules.json
+      5. PEP and sanctions: check all party names against config/watchlists.json
+      6. Channel anomalies: flag transaction types inconsistent with account purpose
+
+      Write all alerts to data/flagged/screening-alerts.json. Each alert must include:
+      - transaction_id, customer_id, alert_code, severity, action_required
+      - evidence: specific data points that triggered the alert
+      - screening_timestamp
+
+      Also write a screening summary to data/flagged/screening-summary.json:
+      - total_transactions_screened
+      - total_alerts_generated (by severity and alert_code)
+      - customers_flagged
+
+  analyze-patterns:
+    mode: agent
+    agent: pattern-analyst
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    directive: |
+      Analyze the screening alerts in data/flagged/screening-alerts.json to identify AML typologies.
+
+      Group alerts by customer_id. For each customer with alerts:
+      1. Review their full alert set together — patterns emerge across transactions, not within one
+      2. Cross-reference with customer profile in data/customers/ for baseline context
+      3. Apply typology detection (structuring, layering, integration, TBML, round-tripping, funnel accounts)
+      4. Compute composite risk score (0-100) per the scoring model in config/risk-weights.json
+      5. Identify which typology best fits the observed pattern (may be multiple)
+
+      Write pattern-report.json to data/analysis/pattern-report.json with:
+      - customer_id, typologies_detected (array), risk_score (0-100), risk_tier (CRITICAL/HIGH/MEDIUM/LOW)
+      - evidence_summary: key transactions and behavioral signals per typology
+      - high_risk_count: number of customers scoring >= 70
+      - analysis_timestamp
+
+      Use sequential-thinking to systematically work through complex multi-hop patterns.
+
+      Then output your decision:
+      - verdict: "critical" if any customer scores >= 80 or has SANCTIONS_HIT/PEP_EXPOSURE
+      - verdict: "elevated" if any customer scores 50-79 or has multiple HIGH severity alerts
+      - verdict: "routine" if all alerts are CTR_TRIGGER-only with no pattern indicators
+      - reasoning: explain what drove the verdict (specific typologies, counts, scores)
+      - high_risk_count: integer
+      - typologies_detected: array of strings
+    decision_contract:
+      required_fields: [verdict, reasoning, high_risk_count, typologies_detected]
+      valid_verdicts: [critical, elevated, routine]
+
+  enhanced-due-diligence:
+    mode: agent
+    agent: aml-investigator
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    directive: |
+      Perform Enhanced Due Diligence (EDD) on all high-risk customers identified in
+      data/analysis/pattern-report.json (risk_tier: CRITICAL or HIGH).
+
+      For each customer, review:
+      1. Account opening documentation and KYC records in data/customers/<customer_id>/
+      2. Full transaction history — look for patterns over 90-day window
+      3. Beneficial ownership structures in data/ownership/<customer_id>/
+      4. Source of funds and source of wealth documentation
+      5. Business purpose of account (for business accounts: industry, revenue sources, counterparties)
+      6. Prior SAR/CTR history if documented in data/customers/<customer_id>/prior_activity.json
+      7. Watchlist cross-reference: check all associated parties against config/watchlists.json
+
+      For each customer, write an EDD report to data/edd/<customer_id>-edd.json:
+      - customer_id, edd_date, reviewing_investigator: "aml-investigator"
+      - risk_factors: array of specific findings that elevate risk
+      - mitigating_factors: any documented legitimate explanations found
+      - recommended_action: INVESTIGATE | MONITOR | EXIT
+      - edd_summary: 2-3 sentence narrative
+
+  investigate-activity:
+    mode: agent
+    agent: aml-investigator
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    directive: |
+      Conduct a deep investigation of suspicious activity for each customer flagged in the
+      EDD reports at data/edd/ with recommended_action: INVESTIGATE.
+
+      Follow the investigation methodology:
+      1. Build a complete transaction timeline for the subject (read data/transactions/normalized/
+         and data/customers/ for full history)
+      2. Trace fund flows — follow money from origin through every intermediate account to destination
+      3. Map counterparty relationships: shared identifiers (address, phone, employer) with subject
+      4. Identify beneficial ownership chains for any entity counterparties
+      5. Evaluate source of funds against known income/wealth
+      6. Check all observed patterns against config/ml-typologies.json
+      7. Actively seek and document legitimate explanations — what business purpose could explain this?
+
+      Use sequential-thinking to work through complex fund flow chains systematically.
+
+      Write investigation report to data/investigations/<customer_id>-case-report.json:
+      - case_id (generate: CASE-YYYYMMDD-NNNN), customer_id, investigation_date
+      - fund_flow_summary: description of money movement with amounts and accounts
+      - typology_assessment: which ML typology is most consistent with observed activity
+      - evidence_items: array of {transaction_id, finding, confidence: HIGH|MEDIUM|LOW}
+      - total_suspicious_amount: conservative cumulative amount of suspicious activity
+      - alternative_explanations_considered: what legitimate explanations were evaluated and why ruled out
+      - confidence_score: 0-100 (overall confidence that activity is suspicious)
+
+      Then output your decision verdict:
+      - "suspicious": confidence >= 60 and evidence clearly supports SAR filing
+      - "inconclusive": confidence 30-59 or key evidence is missing but suspicion remains
+      - "legitimate": found documented legitimate business purpose that fully explains the activity
+      - "escalate": involves PEPs, foreign government officials, organized crime indicators, or > $1M
+      - evidence_summary: 2-3 sentence summary of key findings
+      - estimated_suspicious_amount: dollar figure
+    decision_contract:
+      required_fields: [verdict, reasoning, evidence_summary, confidence_score, estimated_suspicious_amount]
+      valid_verdicts: [suspicious, inconclusive, legitimate, escalate]
+    retry_policy:
+      max_attempts: 3
+      on_failure: escalate
+
+  compliance-review:
+    mode: agent
+    agent: compliance-officer
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    directive: |
+      Review investigation findings at data/investigations/ and make the filing decision.
+
+      For each completed investigation:
+      1. Evaluate the evidence package — is it sufficient, specific, and defensible?
+      2. Apply the SAR filing standard: "knows, suspects, or has reason to suspect"
+         funds involve illegal activity or transactions evade reporting. The standard is
+         REASON TO SUSPECT — not proof. When in doubt, file.
+      3. Assess timing: calculate days since initial detection from data/flagged/screening-alerts.json
+         — 30-day deadline from detection (60 if no subject identified)
+      4. Determine regulatory requirements:
+         - SAR: if activity meets suspicion standard
+         - CTR: if any cash transactions >= $10,000 (may be filed by screener phase already)
+         - 314(a) referral: if law enforcement has active interest
+         - 314(b) sharing: if other FIs may have relevant information
+      5. Assess account action: should the customer relationship continue (monitor/restrict/exit)?
+      6. Check: is this a continuing SAR situation (activity ongoing, 90-day continuation needed)?
+
+      Write decision to data/decisions/<case_id>-compliance-decision.json:
+      - case_id, customer_id, decision_date, bsa_officer: "compliance-officer"
+      - filing_required: array of filing types (SAR | CTR | none)
+      - law_enforcement_referral: boolean with rationale
+      - account_action: MONITOR | RESTRICT | EXIT
+      - days_to_deadline: integer (days remaining before SAR deadline)
+      - decision_rationale: detailed explanation (will become basis of case record)
+
+      Output your verdict:
+      - "file-sar": proceed with SAR preparation
+      - "monitor": insufficient basis now, continue monitoring with 90-day review trigger
+      - "close": activity explained or below filing threshold — document rationale thoroughly
+      - "rework": investigation has specific gaps — state EXACTLY what additional evidence is needed
+    decision_contract:
+      required_fields: [verdict, reasoning, filing_required, law_enforcement_referral, account_action]
+      valid_verdicts: [file-sar, monitor, close, rework]
+
+  prepare-sar:
+    mode: agent
+    agent: filing-specialist
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    directive: |
+      Prepare FinCEN Suspicious Activity Report (SAR) filing based on:
+      - Investigation report: data/investigations/<case_id>-case-report.json
+      - Compliance decision: data/decisions/<case_id>-compliance-decision.json
+      - Customer profile: data/customers/<customer_id>/
+      - SAR template: config/sar-template.json
+
+      Complete all required SAR fields:
+      PART I — Subject Information:
+        - Full legal name (no nicknames), SSN/TIN or mark "Unknown"
+        - DOB (or "Unknown"), address, phone
+        - Account number(s) at the filing institution
+        - All financial institutions involved
+
+      PART II — Suspicious Activity:
+        - Date range (first to last date of suspicious activity)
+        - Cumulative dollar amount of suspicious activity
+        - Suspicious activity type: check all applicable (20+ categories in BSA E-Filing)
+        - Amount involved in structuring (if applicable)
+
+      PART III — Filing Institution:
+        - Standard institution fields (will be populated from config)
+
+      PART IV — Narrative (your most important output):
+        Write a 400-800 word factual narrative using the WHO/WHAT/WHEN/WHERE/WHY/HOW structure.
+        Be specific: name accounts, amounts, dates, transaction IDs. Reference patterns explicitly.
+        Do NOT write legal conclusions. Do NOT speculate without factual basis.
+        Use templates/sar-narrative.md as a structural guide.
+
+      Write SAR draft JSON to data/sars/<case_id>-draft-sar.json
+      Write narrative separately to data/sars/<case_id>-narrative.md
+      If this is a continuation SAR, note the prior SAR BSA ID.
+
+  validate-sar:
+    mode: agent
+    agent: compliance-officer
+    directive: |
+      Quality-review the SAR draft before filing. Read:
+      - data/sars/<case_id>-draft-sar.json (SAR fields)
+      - data/sars/<case_id>-narrative.md (narrative)
+      - data/decisions/<case_id>-compliance-decision.json (filing decision basis)
+
+      Validate against FinCEN common rejection and deficiency reasons:
+      □ All required Part I fields present (subject name/account at minimum)
+      □ Date range is reasonable and matches investigation findings
+      □ Cumulative amount is correct (not individual transaction amounts)
+      □ Suspicious activity type boxes are checked and consistent with narrative
+      □ Narrative covers WHO/WHAT/WHEN/WHERE/WHY/HOW — no missing elements
+      □ No prohibited content (legal conclusions, law enforcement names, speculation)
+      □ Narrative length 300-1,000 words
+      □ Amount calculations in narrative match Part II fields
+      □ Subject identification is complete or marked Unknown with explanation
+      □ No grammar/formatting errors that would confuse a reviewer
+      □ If continuation SAR: prior BSA ID is referenced
+
+      Output your verdict:
+      - "approved": SAR is complete and ready for BSA E-Filing submission
+      - "revise": specific issues found — list EACH issue with the field name and correction needed
+      - issues_if_any: array of specific issues (empty if approved)
+    decision_contract:
+      required_fields: [verdict, reasoning, issues_if_any]
+      valid_verdicts: [approved, revise]
+
+  file-reports:
+    mode: command
+    command:
+      program: bash
+      args: ["-c", "bash scripts/file-reports.sh"]
+      cwd_mode: project_root
+      timeout_secs: 60
+
+  file-ctrs:
+    mode: agent
+    agent: filing-specialist
+    capabilities:
+      writes_files: true
+    directive: |
+      Prepare Currency Transaction Reports (CTRs) for all transactions that triggered
+      CTR_TRIGGER alerts in data/flagged/screening-alerts.json.
+
+      CTR preparation rules:
+      1. Aggregate transactions: if the same person conducted multiple cash transactions
+         at the same institution on the same business day, aggregate them into a single CTR.
+         The threshold applies to the aggregate, not individual transactions.
+      2. Two-party transactions: identify both the CONDUCTOR (who physically conducted
+         the transaction at the teller/ATM) and the PERSON ON WHOSE BEHALF the transaction
+         was conducted (the account holder or beneficiary), if different.
+      3. Required fields per transaction:
+         - Part I: Person conducting transaction (name, SSN/TIN, DOB, address, occupation)
+         - Part II (if different): Person on whose behalf conducted
+         - Part III: Account information (number, type, balance before/after)
+         - Part IV: Filing institution information
+         - Transaction details: date, amount, type (deposit/withdrawal/exchange), currency type
+
+      Write each CTR to output/ctrs/CTR-<date>-<customer_id>.json using config/ctr-template.json.
+      CTRs must be filed within 15 calendar days of the transaction date.
+      Log all prepared CTRs to data/audit/ctr-log.json.
+
+  generate-case-summary:
+    mode: agent
+    agent: filing-specialist
+    capabilities:
+      writes_files: true
+    directive: |
+      Generate a comprehensive case summary for internal records and regulatory examination readiness.
+
+      Read all available case files:
+      - data/flagged/screening-alerts.json (initial detection)
+      - data/analysis/pattern-report.json (typology assessment)
+      - data/edd/ (enhanced due diligence)
+      - data/investigations/ (investigation findings)
+      - data/decisions/ (compliance officer decisions)
+      - data/sars/ and data/audit/filing-log.json (filed reports)
+
+      Write the case summary to output/reports/case-summary-<date>.md using templates/case-summary.md.
+
+      The summary must include:
+      1. Executive Summary (3-4 sentences): what happened, what was found, what was filed
+      2. Detection Narrative: how the activity was identified (alert types, screening date)
+      3. Investigation Findings: key evidence, fund flow summary, typology classification
+      4. Filing Decision: what was filed (SAR/CTR), BSA IDs if available, rationale for decisions
+      5. Account Actions: customer relationship status going forward
+      6. Timeline: key dates from detection to resolution (with day counts)
+      7. Open Items: monitoring triggers, continuation SAR schedule, follow-up actions
+      8. Examiner Notes: why this case was handled properly (for exam preparation)
+
+      Also write a management metrics entry to output/reports/metrics-log.json (append if exists):
+      - case_id, resolution_date, typology, amount, filing_type, days_to_resolution, outcome
+
+  update-monitoring-rules:
+    mode: agent
+    agent: pattern-analyst
+    capabilities:
+      mutates_state: true
+      writes_files: true
+      requires_commit: true
+    directive: |
+      Update monitoring configuration based on findings from the completed investigation.
+      Read the case summary at output/reports/case-summary-<date>.md and the investigation
+      reports in data/investigations/.
+
+      1. ML TYPOLOGIES UPDATE: If new patterns or sub-variants were observed that aren't
+         fully captured in config/ml-typologies.json, add them with:
+         - typology_id (new), name, description, indicators (array), risk_weight
+         - case_reference: the case_id where this pattern was observed
+         Preserve all existing entries — only ADD or ENHANCE, never remove.
+
+      2. SCREENING RULE TUNING: Review data/audit/screening-metrics.json if present.
+         If false positive rate > 20% for a specific alert_code, note recommended threshold
+         adjustment with justification. Write recommendations to data/audit/rule-updates.json.
+         Do NOT automatically change thresholds — flag for human review.
+
+      3. WATCHLIST UPDATES: If investigation revealed new high-risk counterparties or entities,
+         add them to config/watchlists.json under the appropriate category (adverse_media,
+         known_associates, shell_companies). Include case_reference.
+
+      4. RULE CHANGE LOG: Write all changes to data/audit/rule-updates.json:
+         - timestamp, change_type, field_changed, old_value, new_value, case_reference, justification
+
+      Commit the config changes with a message referencing the case_id.

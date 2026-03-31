@@ -1,0 +1,15 @@
+schedules:
+  - id: continuous-screening
+    cron: "*/30 * * * *"
+    workflow_ref: transaction-screening
+    enabled: true
+
+  - id: daily-investigation
+    cron: "0 7 * * *"
+    workflow_ref: full-investigation
+    enabled: true
+
+  - id: quarterly-review
+    cron: "0 9 1 */3 *"
+    workflow_ref: periodic-review
+    enabled: true

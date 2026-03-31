@@ -1,0 +1,68 @@
+{
+  "bsa_thresholds": {
+    "ctr_cash_threshold": 10000,
+    "ctr_aggregation_window_hours": 24,
+    "structuring_lookback_days": 7,
+    "structuring_lower_bound": 9000,
+    "structuring_upper_bound": 9999
+  },
+  "velocity_rules": {
+    "volume_spike_multiplier": 3.0,
+    "value_spike_multiplier": 5.0,
+    "baseline_lookback_days": 90,
+    "minimum_baseline_transactions": 5
+  },
+  "geographic_risk": {
+    "fatf_grey_list": [
+      "AF", "BB", "BF", "CM", "CD", "HT", "IR", "JM", "ML", "MZ",
+      "MM", "NI", "PK", "PA", "PH", "SN", "SS", "SY", "TZ", "UG",
+      "AE", "VU", "VN", "YE"
+    ],
+    "fatf_black_list": ["KP", "IR"],
+    "ofac_sanctioned_countries": ["CU", "IR", "KP", "SY", "VE"],
+    "high_risk_jurisdictions": ["BS", "BZ", "KY", "VG", "PA", "LB", "MT"],
+    "risk_weights": {
+      "fatf_grey_list": 25,
+      "fatf_black_list": 50,
+      "ofac_sanctioned": 100,
+      "high_risk_jurisdiction": 15
+    }
+  },
+  "alert_codes": {
+    "CTR_TRIGGER": {
+      "description": "Cash transaction at or above $10,000 CTR threshold",
+      "default_severity": "MEDIUM",
+      "action_required": "FILE_CTR"
+    },
+    "STRUCTURING_SUSPECTED": {
+      "description": "Multiple sub-threshold cash transactions suggesting structuring",
+      "default_severity": "HIGH",
+      "action_required": "INVESTIGATE"
+    },
+    "VELOCITY_ANOMALY": {
+      "description": "Transaction activity significantly exceeds customer baseline",
+      "default_severity": "MEDIUM",
+      "action_required": "INVESTIGATE"
+    },
+    "GEO_RISK": {
+      "description": "Transaction involves high-risk or sanctioned jurisdiction",
+      "default_severity": "HIGH",
+      "action_required": "INVESTIGATE"
+    },
+    "PEP_EXPOSURE": {
+      "description": "Counterparty matches Politically Exposed Person watchlist",
+      "default_severity": "HIGH",
+      "action_required": "INVESTIGATE"
+    },
+    "SANCTIONS_HIT": {
+      "description": "OFAC SDN or blocked person list match",
+      "default_severity": "CRITICAL",
+      "action_required": "HOLD"
+    },
+    "CHANNEL_ANOMALY": {
+      "description": "Transaction type inconsistent with account purpose",
+      "default_severity": "LOW",
+      "action_required": "MONITOR"
+    }
+  }
+}

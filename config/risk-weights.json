@@ -1,0 +1,53 @@
+{
+  "_description": "Composite risk score model for AML pattern analysis. Max score: 100.",
+  "components": {
+    "typology_match": {
+      "weight": 40,
+      "description": "Strength of match to known AML typology",
+      "scoring": {
+        "strong_match": 40,
+        "moderate_match": 25,
+        "weak_match": 10,
+        "no_match": 0
+      }
+    },
+    "velocity_deviation": {
+      "weight": 30,
+      "description": "How far activity deviates from customer's established baseline",
+      "scoring": {
+        "exceeds_500pct": 30,
+        "exceeds_300pct": 20,
+        "exceeds_200pct": 10,
+        "within_baseline": 0
+      }
+    },
+    "geographic_risk": {
+      "weight": 20,
+      "description": "Geographic risk of transaction origins and destinations",
+      "scoring": {
+        "ofac_sanctioned": 20,
+        "fatf_black_list": 18,
+        "fatf_grey_list": 12,
+        "high_risk_jurisdiction": 8,
+        "low_risk": 0
+      }
+    },
+    "pep_sanctions_exposure": {
+      "weight": 10,
+      "description": "Exposure to PEPs or sanctioned entities",
+      "scoring": {
+        "sanctions_hit": 10,
+        "pep_exposure": 8,
+        "adverse_media": 5,
+        "known_associate": 7,
+        "no_exposure": 0
+      }
+    }
+  },
+  "risk_tiers": {
+    "CRITICAL": {"min": 80, "max": 100, "action": "IMMEDIATE_INVESTIGATION"},
+    "HIGH": {"min": 60, "max": 79, "action": "INVESTIGATE"},
+    "MEDIUM": {"min": 40, "max": 59, "action": "ENHANCED_MONITORING"},
+    "LOW": {"min": 0, "max": 39, "action": "ROUTINE_MONITORING"}
+  }
+}

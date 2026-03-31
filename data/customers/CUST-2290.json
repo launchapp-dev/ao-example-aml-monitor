@@ -1,0 +1,40 @@
+{
+  "customer_id": "CUST-2290",
+  "last_name": "Hartmann",
+  "first_name": "Frederick",
+  "middle_name": "W.",
+  "dob": "1965-09-22",
+  "ssn_last4": "XXXX",
+  "address": "400 Park Avenue, Suite 1200, New York, NY 10022",
+  "phone": "212-555-0388",
+  "email": "fhartmann@hartmanngroup.com",
+  "occupation": "Investment Advisor",
+  "employer": "Hartmann Advisory Group LLC",
+  "annual_income_stated": 450000,
+  "customer_since": "2018-03-15",
+  "account_purpose_stated": "Business operating account — client fee receipts and investment activity",
+  "kyc_completed": "2018-03-15",
+  "kyc_refreshed": "2022-03-15",
+  "kyc_tier": "Enhanced",
+  "risk_rating": "HIGH",
+  "accounts": [
+    {
+      "account_number": "10022900001",
+      "account_type": "BUSINESS_CHECKING",
+      "opened": "2018-03-15",
+      "status": "ACTIVE",
+      "average_monthly_balance": 180000,
+      "primary_transaction_types": ["WIRE_IN", "WIRE_OUT", "ACH_CREDIT"]
+    }
+  ],
+  "transaction_baseline_90d": {
+    "avg_monthly_volume": 15,
+    "avg_monthly_value": 95000,
+    "typical_transaction_types": ["WIRE_IN", "WIRE_OUT"],
+    "cash_transaction_history": "No cash transactions",
+    "typical_counterparties": ["domestic investment accounts", "US brokerage firms"]
+  },
+  "prior_sar_history": [],
+  "prior_ctr_history": [],
+  "edd_history": []
+}

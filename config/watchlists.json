@@ -1,0 +1,44 @@
+{
+  "_note": "Sample watchlist data for demonstration purposes. In production, integrate with OFAC SDN API, FinCEN 314(a), and commercial PEP/sanctions data providers.",
+  "pep": {
+    "_description": "Politically Exposed Persons — foreign government officials and their immediate family/close associates",
+    "entries": [
+      {
+        "name": "SAMPLE FOREIGN OFFICIAL",
+        "aliases": [],
+        "country": "XX",
+        "position": "Former Finance Minister",
+        "risk_level": "HIGH",
+        "source": "Sample PEP Database"
+      }
+    ]
+  },
+  "sanctions": {
+    "_description": "OFAC SDN List — Specially Designated Nationals and Blocked Persons",
+    "entries": [
+      {
+        "name": "SAMPLE SANCTIONED ENTITY",
+        "sdn_type": "Entity",
+        "country": "IR",
+        "programs": ["IRAN"],
+        "source": "OFAC SDN"
+      }
+    ]
+  },
+  "adverse_media": {
+    "_description": "Entities flagged in adverse media for financial crime, corruption, or fraud",
+    "entries": []
+  },
+  "known_associates": {
+    "_description": "Known associates of money laundering networks identified in prior investigations",
+    "entries": []
+  },
+  "shell_companies": {
+    "_description": "Shell companies identified in prior investigations with no apparent legitimate business purpose",
+    "entries": []
+  },
+  "high_risk_counterparties": {
+    "_description": "Financial institutions or businesses assessed as high-risk for AML purposes",
+    "entries": []
+  }
+}

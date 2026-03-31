@@ -1,0 +1,123 @@
+{
+  "typologies": [
+    {
+      "typology_id": "STRUCT-001",
+      "name": "Classic Structuring / Smurfing",
+      "description": "Deliberately breaking up cash deposits to stay below CTR threshold",
+      "indicators": [
+        "Multiple cash deposits in range $9,000-$9,999 within 7 days",
+        "Same depositor across multiple branches or accounts",
+        "Aggregate of sub-threshold deposits exceeds $10,000",
+        "No apparent legitimate reason for split transactions",
+        "Timing: deposits on consecutive days or same day across branches"
+      ],
+      "risk_weight": 0.85,
+      "statutory_reference": "31 USC 5324",
+      "case_reference": null
+    },
+    {
+      "typology_id": "STRUCT-002",
+      "name": "Funnel Account Structuring",
+      "description": "Multiple individuals deposit cash into single account (funnel), followed by rapid withdrawal or wire out",
+      "indicators": [
+        "More than 3 distinct individuals making cash deposits to same account within 30 days",
+        "Rapid withdrawal or outgoing wire shortly after deposits",
+        "Depositors have no documented relationship to account holder",
+        "Individual deposit amounts below CTR threshold"
+      ],
+      "risk_weight": 0.90,
+      "statutory_reference": "31 USC 5324, 18 USC 1956",
+      "case_reference": null
+    },
+    {
+      "typology_id": "LAYER-001",
+      "name": "Domestic Layering via Wire Transfers",
+      "description": "Rapid movement of funds through multiple domestic accounts to obscure origin",
+      "indicators": [
+        "Same-day or next-day inbound and outbound wire transfers of similar amounts",
+        "Wire transfers to multiple unrelated accounts followed by re-aggregation",
+        "Round number wire amounts ($50,000, $100,000, $250,000)",
+        "No documented business purpose for wire activity",
+        "Account has no operating history prior to wire activity"
+      ],
+      "risk_weight": 0.80,
+      "statutory_reference": "18 USC 1956(a)(1)(B)(i)",
+      "case_reference": null
+    },
+    {
+      "typology_id": "LAYER-002",
+      "name": "International Layering via Offshore Transfers",
+      "description": "Funds routed through offshore jurisdictions with weak AML regimes to obscure origin",
+      "indicators": [
+        "Wire transfers to financial institutions in FATF grey/black list countries",
+        "Use of shell companies or nominee accounts as intermediaries",
+        "Correspondent banking chains with multiple intermediary banks",
+        "Funds return from offshore as 'loans' or 'investments'",
+        "Beneficial ownership opacity — unable to identify natural person"
+      ],
+      "risk_weight": 0.90,
+      "statutory_reference": "18 USC 1956(a)(2)",
+      "case_reference": null
+    },
+    {
+      "typology_id": "INTEG-001",
+      "name": "Real Estate Integration",
+      "description": "Illicit funds integrated into legitimate economy through real estate purchases",
+      "indicators": [
+        "Large cash purchases or cash-heavy down payments on real estate",
+        "Property purchase price significantly above market value",
+        "Rapid property resale (within 12 months) at similar or lower price",
+        "Title held by shell company with opaque ownership",
+        "No mortgage — all-cash transactions"
+      ],
+      "risk_weight": 0.75,
+      "statutory_reference": "18 USC 1957",
+      "case_reference": null
+    },
+    {
+      "typology_id": "INTEG-002",
+      "name": "Cash-Intensive Business Integration",
+      "description": "Illicit cash commingled with legitimate business revenues in cash-intensive business",
+      "indicators": [
+        "Cash revenues inconsistent with business type, size, or location",
+        "Revenue volumes significantly exceed industry benchmarks",
+        "Business deposits show suspiciously uniform or rounded amounts",
+        "Multiple businesses owned by same individual with overlapping cash flows",
+        "Employees or payroll inconsistent with reported revenue"
+      ],
+      "risk_weight": 0.70,
+      "statutory_reference": "18 USC 1956",
+      "case_reference": null
+    },
+    {
+      "typology_id": "TBML-001",
+      "name": "Trade-Based Money Laundering — Mis-Invoicing",
+      "description": "Value transferred across borders through over/under-invoicing in international trade",
+      "indicators": [
+        "Payment amounts on letters of credit significantly above or below market price for described goods",
+        "Phantom shipments — payment made but no corresponding import/export record",
+        "Multiple invoices for same shipment",
+        "Counterparties in high-risk jurisdictions",
+        "Goods description vague or inconsistent with counterparty business type"
+      ],
+      "risk_weight": 0.85,
+      "statutory_reference": "18 USC 1956(a)(2)(A)",
+      "case_reference": null
+    },
+    {
+      "typology_id": "ROUND-001",
+      "name": "Round-Tripping",
+      "description": "Funds sent offshore as loans/investments then returned to appear as legitimate foreign investment",
+      "indicators": [
+        "Outbound international wire followed by inbound 'foreign investment' or 'loan repayment' from same or related entity",
+        "Loan terms non-commercial (no interest, no repayment schedule)",
+        "Foreign 'investor' or 'lender' cannot be verified or has opaque ownership",
+        "Timing of round-trip within 6-18 months",
+        "Amount returned equals or approximates amount sent (minus fees)"
+      ],
+      "risk_weight": 0.80,
+      "statutory_reference": "18 USC 1956(a)(2)",
+      "case_reference": null
+    }
+  ]
+}

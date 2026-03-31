@@ -1,0 +1,88 @@
+default_workflow_ref: full-investigation
+
+workflows:
+  - id: full-investigation
+    name: Full AML Investigation Pipeline
+    description: >
+      Complete AML monitoring cycle — transaction ingestion, BSA screening, typology analysis,
+      enhanced due diligence, deep investigation, compliance review, SAR/CTR filing, and
+      rule updates. Designed for daily batch processing of transaction activity.
+    phases:
+      - ingest-transactions
+      - screen-transactions
+      - analyze-patterns:
+          on_verdict:
+            routine:
+              target: file-ctrs
+          max_rework_attempts: 1
+      - enhanced-due-diligence
+      - investigate-activity:
+          on_verdict:
+            legitimate:
+              target: generate-case-summary
+            inconclusive:
+              target: investigate-activity
+          max_rework_attempts: 2
+      - compliance-review:
+          on_verdict:
+            monitor:
+              target: generate-case-summary
+            close:
+              target: generate-case-summary
+            rework:
+              target: investigate-activity
+          max_rework_attempts: 3
+      - prepare-sar
+      - validate-sar:
+          on_verdict:
+            revise:
+              target: prepare-sar
+          max_rework_attempts: 2
+      - file-reports
+      - file-ctrs
+      - generate-case-summary
+      - update-monitoring-rules
+    post_success:
+      merge:
+        strategy: squash
+        target_branch: main
+        create_pr: true
+        auto_merge: true
+        cleanup_worktree: true
+
+  - id: transaction-screening
+    name: Transaction Screening Only
+    description: >
+      Lightweight screening workflow — ingest and screen transactions for regulatory alerts.
+      Produces screening alerts and pattern summary without deep investigation.
+      Suitable for real-time or near-real-time transaction monitoring.
+    phases:
+      - ingest-transactions
+      - screen-transactions
+      - analyze-patterns
+
+  - id: periodic-review
+    name: Periodic AML Review
+    description: >
+      Scheduled review of existing flagged customers for ongoing monitoring compliance.
+      Handles 90-day SAR continuation reviews, annual EDD refresh, and periodic
+      risk re-assessment of high-risk customers. No transaction ingestion phase.
+    phases:
+      - enhanced-due-diligence
+      - investigate-activity:
+          on_verdict:
+            legitimate:
+              target: generate-case-summary
+            inconclusive:
+              target: investigate-activity
+          max_rework_attempts: 2
+      - compliance-review:
+          on_verdict:
+            monitor:
+              target: generate-case-summary
+            close:
+              target: generate-case-summary
+            rework:
+              target: investigate-activity
+          max_rework_attempts: 2
+      - generate-case-summary

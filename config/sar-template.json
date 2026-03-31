@@ -1,0 +1,84 @@
+{
+  "_description": "FinCEN Suspicious Activity Report (SAR) field specification — BSA E-Filing format reference",
+  "filing_type": "SAR",
+  "bsa_efiling_form": "FinCEN SAR (FINCEN 111)",
+  "fields": {
+    "part_i_subject_information": {
+      "entity_type": {"required": true, "values": ["Individual", "Entity"], "notes": "Whether subject is a person or company"},
+      "last_name_or_entity_name": {"required": true, "notes": "Legal name only, no nicknames"},
+      "first_name": {"required": "if individual"},
+      "middle_name": {"required": false},
+      "suffix": {"required": false},
+      "tin": {"required": false, "notes": "SSN for individuals, EIN for entities. Mark 'Unknown' if unavailable."},
+      "tin_type": {"required": "if tin provided", "values": ["SSN", "EIN", "ITIN", "Foreign"]},
+      "dob": {"required": "if individual", "format": "YYYY-MM-DD", "notes": "Mark 'Unknown' if unavailable"},
+      "address": {"required": true, "notes": "Physical address, not PO Box"},
+      "city": {"required": true},
+      "state": {"required": "if US"},
+      "zip": {"required": "if US"},
+      "country": {"required": true},
+      "phone": {"required": false},
+      "email": {"required": false},
+      "occupation_type_of_business": {"required": true, "notes": "Be specific — 'construction contractor' not just 'business'"},
+      "corroborating_id_type": {"required": false, "values": ["Driver's License", "Passport", "Other"]},
+      "corroborating_id_number": {"required": "if corroborating_id_type provided"},
+      "corroborating_id_issuing_state_country": {"required": "if corroborating_id_type provided"},
+      "relationship_to_institution": {"required": false, "values": ["Accountant", "Agent", "Appraiser", "Attorney", "Borrower", "Customer", "Director", "Employee", "No Relationship", "Officer", "Other", "Owner or Controlling Shareholder"]},
+      "account_numbers": {"required": false, "notes": "All accounts at the filing institution involved in the activity"},
+      "financial_institutions_involved": {"required": false, "notes": "Other FIs through which activity passed"}
+    },
+    "part_ii_suspicious_activity": {
+      "date_of_suspicious_activity_from": {"required": true, "format": "YYYY-MM-DD"},
+      "date_of_suspicious_activity_to": {"required": true, "format": "YYYY-MM-DD"},
+      "total_amount_involved": {"required": true, "type": "decimal", "notes": "CUMULATIVE amount over the entire date range. Not per-transaction."},
+      "activity_types": {
+        "required": true,
+        "select_all_that_apply": [
+          "Bank Secrecy Act/Structuring/Money Laundering",
+          "Bribery/Gratuity",
+          "Check Fraud",
+          "Check Kiting",
+          "Commercial Loan Fraud",
+          "Consumer Loan Fraud",
+          "Counterfeit Check",
+          "Counterfeit Credit/Debit Card",
+          "Counterfeit Instrument (Other)",
+          "Credit Card Fraud",
+          "Debit Card Fraud",
+          "Defalcation/Embezzlement",
+          "False Statement",
+          "Fictitious Account",
+          "Forgeries",
+          "Identity Theft",
+          "Misuse of Position or Self Dealing",
+          "Mortgage Loan Fraud",
+          "Mysterious Disappearance",
+          "Securities Fraud",
+          "Terrorist Financing",
+          "Theft",
+          "Unauthorized Electronic Intrusion",
+          "Wire Transfer Fraud",
+          "Other"
+        ]
+      },
+      "structuring_amount": {"required": false, "type": "decimal", "notes": "Required if structuring is checked"}
+    },
+    "part_iii_filing_institution": {
+      "institution_name": {"required": true},
+      "ein": {"required": true},
+      "address": {"required": true},
+      "city": {"required": true},
+      "state": {"required": true},
+      "zip": {"required": true},
+      "primary_federal_regulator": {"required": true, "values": ["OCC", "FDIC", "Federal Reserve", "NCUA", "OTS"]}
+    },
+    "part_iv_narrative": {
+      "required": true,
+      "min_words": 100,
+      "recommended_words": "300-1000",
+      "structure": "WHO/WHAT/WHEN/WHERE/WHY/HOW",
+      "prohibited": ["Legal conclusions", "Law enforcement names", "Speculation without factual basis", "Attorney-client privileged information"],
+      "must_include": ["Names of subjects", "Account numbers", "Specific transaction dates and amounts", "Why activity is suspicious (specific red flags)", "Methods used (wire, cash, ACH, etc.)"]
+    }
+  }
+}
